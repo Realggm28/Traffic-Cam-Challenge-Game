@@ -17,6 +17,7 @@
           <p>Traffic Cam Challenge · game cash only</p>
         </div>
       </div>
+      <div class="hours-card" id="hoursCard">Open 8:00 AM–4:00 PM</div>
       <div class="balance-card">Balance: <strong id="balanceTop">$5,000</strong></div>
     </header>
 
@@ -33,6 +34,7 @@
               <button class="btn secondary" id="dailyChallengeBtn">Daily Challenge</button>
             </div>
             <p class="fine-print">Version 1 uses recorded public traffic clips and a transparent review simulation. It does not use real AI detection yet, and it will not invent live camera data.</p>
+            <p class="fine-print hours-note">Playable hours: <strong>8:00 AM to 4:00 PM</strong> based on this device’s local time.</p>
           </div>
         </div>
 
@@ -155,6 +157,7 @@
           <div class="safety-box">
             <h3>Privacy and safety rules</h3>
             <p class="fine-print">Use only public or properly licensed recorded traffic clips. Do not identify people or license plates. Do not zoom in on private details. Do not store camera images or video from users. Do not track real people. This game uses game cash only and has no real-money payments, crypto, prizes, or wagering.</p>
+            <p class="fine-print">Access hours are fixed at 8:00 AM to 4:00 PM local device time. Outside that window, playing is locked so the game is mainly used during brighter camera conditions.</p>
           </div>
           <div class="button-row left settings-buttons">
             <button class="btn" id="saveSettingsBtn">Save Settings</button>
@@ -173,6 +176,19 @@
         <div id="achievements" class="leader-list"></div>
       </aside>
     </main>
+  </div>
+
+  <div id="closedOverlay" class="closed-overlay" aria-live="polite">
+    <div class="closed-card">
+      <div class="eyebrow">Game closed</div>
+      <h2>come back at <span>8:00 AM</span></h2>
+      <p id="closedMessage" class="subtitle">This game is playable from 8:00 AM to 4:00 PM local time.</p>
+      <div class="closed-stats">
+        <div><span>Current time</span><strong id="currentTimeLabel">--:--</strong></div>
+        <div><span>Opens again</span><strong id="opensAtLabel">8:00 AM</strong></div>
+      </div>
+      <p class="fine-print">This helps avoid darker camera conditions that can make reviews glitchy. The lock uses this device’s local clock.</p>
+    </div>
   </div>
 
   <div id="tutorial" class="tutorial">
