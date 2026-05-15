@@ -15,6 +15,9 @@ const STORAGE_KEYS = {
 const STARTING_BALANCE = 5000;
 const ROUND_SPEED_MULTIPLIER = 12;
 const MAX_LOG_ITEMS = 16;
+const OPEN_HOUR = 8;
+const CLOSE_HOUR = 16;
+let hoursInterval = null;
 
 const storage = {
   get(key, fallback = "") {
@@ -141,6 +144,64 @@ const state = {
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
 
+function isWithinPlayableHours(date = new Date()) {
+  const hour = date.getHours();
+  return hour >= OPEN_HOUR && hour < CLOSE_HOUR;
+}
+
+function formatTime(date) {
+  return date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+}
+
+function getNextOpenDate(now = new Date()) {
+  const next = new Date(now);
+  next.setHours(OPEN_HOUR, 0, 0, 0);
+  if (now.getHours() >= CLOSE_HOUR) next.setDate(next.getDate() + 1);
+  return next;
+}
+
+function enforcePlayableHours() {
+  const now = new Date();
+  const open = isWithinPlayableHours(now);
+  document.body.classList.toggle("closed-hours", !open);
+
+  const hoursCard = $("#hoursCard");
+  if (hoursCard) {
+    hoursCard.classList.toggle("closed", !open);
+    hoursCard.textContent = open ? "Open until 4:00 PM" : "Closed until 8:00 AM";
+  }
+
+  const currentTimeLabel = $("#currentTimeLabel");
+  if (currentTimeLabel) currentTimeLabel.textContent = formatTime(now);
+
+  const opensAtLabel = $("#opensAtLabel");
+  if (opensAtLabel) opensAtLabel.textContent = formatTime(getNextOpenDate(now));
+
+  const closedMessage = $("#closedMessage");
+  if (closedMessage) closedMessage.textContent = "This game is playable from 8:00 AM to 4:00 PM local time.";
+
+  if (!open) {
+    if (state.timer) {
+      clearInterval(state.timer);
+      state.timer = null;
+    }
+    const video = $("#trafficVideo");
+    if (video) video.pause();
+
+    const activeScreen = $(".screen.active");
+    if (activeScreen && !["home", "settings"].includes(activeScreen.id)) {
+      $$(".screen").forEach((screen) => screen.classList.remove("active"));
+      $("#home")?.classList.add("active");
+    }
+  }
+
+  return open;
+}
+
+function requirePlayableHours() {
+  return enforcePlayableHours();
+}
+
 function money(value) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value);
 }
@@ -165,6 +226,8 @@ function renderSharedUI() {
 }
 
 function showScreen(id) {
+  enforcePlayableHours();
+  if (!isWithinPlayableHours() && id !== "home" && id !== "settings") return;
   $$(".screen").forEach((screen) => screen.classList.remove("active"));
   const screen = $("#" + id);
   if (screen) screen.classList.add("active");
@@ -226,6 +289,7 @@ function getRiskMultiplier() {
 }
 
 function startRound() {
+  if (!requirePlayableHours()) return;
   const risk = Math.floor(Number($("#riskAmount")?.value || 250));
   if (!state.currentPrediction) createPrediction();
   if (!state.selectedChoice) return alert("Pick Over or Under first.");
@@ -568,6 +632,9 @@ function init() {
   loadSettings();
   renderCameras();
   renderSharedUI();
+  enforcePlayableHours();
+  if (hoursInterval) clearInterval(hoursInterval);
+  hoursInterval = setInterval(enforcePlayableHours, 30000);
   if (!storage.get(STORAGE_KEYS.tutorialSeen)) {
     setTimeout(() => $("#tutorial")?.classList.add("show"), 600);
   }
